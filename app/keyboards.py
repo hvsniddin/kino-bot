@@ -6,7 +6,7 @@ from app.config import CHANNELS
 
 def delete_button_keyboard(code: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text="Delete", callback_data=f"delreq:{code}")]]
+        inline_keyboard=[[InlineKeyboardButton(text="O'chirish", callback_data=f"delreq:{code}")]]
     )
 
 
@@ -14,8 +14,8 @@ def confirm_delete_keyboard(code: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Confirm delete", callback_data=f"delok:{code}"),
-                InlineKeyboardButton(text="Cancel", callback_data=f"delcancel:{code}"),
+                InlineKeyboardButton(text="Tasdiqlash", callback_data=f"delok:{code}"),
+                InlineKeyboardButton(text="Bekor qilish", callback_data=f"delcancel:{code}"),
             ]
         ]
     )

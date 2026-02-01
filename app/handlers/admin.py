@@ -14,57 +14,56 @@ router = Router()
 @router.message(Command("add"))
 async def add_movie(message: types.Message, state: FSMContext):
     if message.from_user is None or not is_admin(message.from_user.id):
-        await message.answer("You are not authorized to add movies.")
         return
     if STORAGE_CHANNEL_ID is None:
         await message.answer("Storage channel is not configured.")
         return
     await state.set_state(AddMovie.waiting_for_video)
-    await message.answer("Send the movie video to store.")
+    await message.answer("Kinoni yuboring.")
 
 
 @router.message(AddMovie.waiting_for_video, F.video)
 async def receive_movie_video(message: types.Message, state: FSMContext):
     await state.update_data(file_id=message.video.file_id)
     await state.set_state(AddMovie.waiting_for_name)
-    await message.answer("Video received. Send the movie name.")
+    await message.answer("Kino qabul qilindi. Kino nomini kiriting.")
 
 
 @router.message(AddMovie.waiting_for_video)
 async def expect_video(message: types.Message):
-    await message.answer("Please send a video file to proceed.")
+    await message.answer("Iltimos, kinoni video shaklida yuboring.")
 
 
 @router.message(AddMovie.waiting_for_name, F.text)
 async def receive_movie_name(message: types.Message, state: FSMContext):
     name = message.text.strip()
     if not name:
-        await message.answer("Name cannot be empty. Send a valid name.")
+        await message.answer("Iltimos, kino nomini text shaklida yuboring.")
         return
     await state.update_data(name=name)
     await state.set_state(AddMovie.waiting_for_description)
-    await message.answer("Send the movie description.")
+    await message.answer("Kino tavsifini yuboring.")
 
 
 @router.message(AddMovie.waiting_for_name)
 async def expect_name(message: types.Message):
-    await message.answer("Send the movie name as text.")
+    await message.answer("Iltimos, kino nomini text shaklida yuboring.")
 
 
 @router.message(AddMovie.waiting_for_description, F.text)
 async def receive_movie_description(message: types.Message, state: FSMContext):
     description = message.text.strip()
     if not description:
-        await message.answer("Description cannot be empty. Send a valid description.")
+        await message.answer("Iltimos, kino tavsifini text shaklida yuboring.")
         return
     await state.update_data(description=description)
     await state.set_state(AddMovie.waiting_for_code)
-    await message.answer("Send the movie code.")
+    await message.answer("Kino kodini yuboring.")
 
 
 @router.message(AddMovie.waiting_for_description)
 async def expect_description(message: types.Message):
-    await message.answer("Send the movie description as text.")
+    await message.answer("Iltimos, kino tavsifini text shaklida yuboring..")
 
 
 @router.message(AddMovie.waiting_for_code, F.text)
@@ -75,11 +74,11 @@ async def receive_movie_code(message: types.Message, state: FSMContext):
     description = data.get("description", "")
     code = message.text.strip()
     if not file_id:
-        await message.answer("No video stored in state. Restart with /add.")
+        await message.answer("❌ Xatolik yuz berdi. Qayta urinib ko'ring /add.")
         await state.clear()
         return
     if not code:
-        await message.answer("Code cannot be empty. Send a valid code.")
+        await message.answer("Iltimos, kino kodini text shaklida yuboring.")
         return
     caption = format_caption(name, description, code)
     keyboard = delete_button_keyboard(code)
@@ -90,33 +89,32 @@ async def receive_movie_code(message: types.Message, state: FSMContext):
         reply_markup=keyboard,
     )
     if save_movie(code, file_id, sent.message_id, name, description):
-        await message.answer(f"Movie registered with code: {code}")
+        await message.answer(f"✅ Kino `{name}` muvaffaqiyatli qo'shildi.")
     else:
-        await message.answer("This movie code already exists. Use another code.")
+        await message.answer("Bu kod allaqachon ishlatilga. Boshqa kod bilan urinib ko'ring.")
     await state.clear()
 
 
 @router.message(AddMovie.waiting_for_code)
 async def expect_code(message: types.Message):
-    await message.answer("Send the movie code as text.")
+    await message.answer("Iltimos, kino kodini text shaklida yuboring.")
 
 
 @router.message(Command("remove"))
 async def remove_movie_command(message: types.Message):
     if message.from_user is None or not is_admin(message.from_user.id):
-        await message.answer("You are not authorized to remove movies.")
         return
     parts = message.text.split(maxsplit=1)
     if len(parts) < 2 or not parts[1].strip():
-        await message.answer("Usage: /remove <code>")
+        await message.answer("Ishlatish: /remove <code>")
         return
     code = parts[1].strip()
     record = get_movie_record(code)
     if not record:
-        await message.answer("Movie code not found.")
+        await message.answer("Kino topilmadi.")
         return
     await message.answer(
-        f"Confirm delete for `{code}`?",
+        f"Ushbi kodli kinoni o'chirishni xohlaysizmi: `{code}`?",
         reply_markup=confirm_delete_keyboard(code),
     )
 
@@ -141,7 +139,7 @@ async def delete_cancel(callback: types.CallbackQuery):
     if callback.from_user is None or not is_admin(callback.from_user.id):
         await callback.answer("Not authorized", show_alert=True)
         return
-    await callback.answer("Cancelled")
+    await callback.answer("Bekor qilindi")
     if callback.message:
         try:
             await callback.message.edit_reply_markup(reply_markup=delete_button_keyboard(code))
@@ -157,7 +155,7 @@ async def delete_confirm(callback: types.CallbackQuery):
         return
     record = get_movie_record(code)
     if not record:
-        await callback.answer("Movie not found", show_alert=True)
+        await callback.answer("Kino topilmadi", show_alert=True)
         try:
             if callback.message:
                 await callback.message.edit_reply_markup(reply_markup=None)
@@ -171,7 +169,7 @@ async def delete_confirm(callback: types.CallbackQuery):
             await callback.bot.delete_message(chat_id=STORAGE_CHANNEL_ID, message_id=storage_message_id)
         except Exception:  # noqa
             pass
-    await callback.answer("Movie removed" if removed else "Failed to remove", show_alert=True)
+    await callback.answer("✅ Kino o'chirildi" if removed else "❌ Xatolik yuz berdi", show_alert=True)
     if callback.message:
         try:
             await callback.message.delete()
