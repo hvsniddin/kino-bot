@@ -17,3 +17,4 @@ def validate_config():
         raise RuntimeError("BOT_TOKEN is required")
     if STORAGE_CHANNEL_ID is None:
         raise RuntimeError("STORAGE_CHANNEL_ID is required")
+

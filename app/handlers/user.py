@@ -13,10 +13,10 @@ async def start_command(message: types.Message):
     if message.from_user is None:
         return
     if not await is_member(message.bot, message.from_user.id):
-        keyboard = await build_join_keyboard(message.bot)
-        await message.answer("Botdan foydalanish uchun quyidagi kanallarga obuna bo'ling.", reply_markup=keyboard)
+        keyboard = build_join_keyboard()
+        await message.answer("You must join the required channels to use this bot.", reply_markup=keyboard)
         return
-    await message.answer("Xush kelibsiz! Kino kodini yuboring.")
+    await message.answer("Welcome! Send the movie code to receive the file.")
 
 
 @router.message(F.text)
@@ -24,13 +24,13 @@ async def handle_movie_request(message: types.Message):
     if message.from_user is None:
         return
     if not await is_member(message.bot, message.from_user.id):
-        keyboard = await build_join_keyboard(message.bot)
-        await message.answer("Botdan foydalanish uchun quyidagi kanallarga obuna bo'ling.", reply_markup=keyboard)
+        keyboard = build_join_keyboard()
+        await message.answer("You must join the required channels to use this bot.", reply_markup=keyboard)
         return
     code = message.text.strip()
     record = get_movie_record(code)
     if not record:
-        await message.answer("Kino topilmadi.")
+        await message.answer("Invalid or unknown movie code.")
         return
     _, file_id, _, name, description = record
     caption = format_caption(name or "", description or "")
@@ -39,7 +39,7 @@ async def handle_movie_request(message: types.Message):
 
 @router.message()
 async def unsupported_message(message: types.Message):
-    await message.answer("Iltimos, kino kodini text shaklida yuboring.")
+    await message.answer("Send a movie code as text.")
 
 
 @router.callback_query(F.data == "recheck_membership")
@@ -51,11 +51,12 @@ async def recheck_membership(callback: types.CallbackQuery):
     user_id = callback.from_user.id
     chat_id = callback.message.chat.id if callback.message else callback.from_user.id
     if not await is_member(callback.bot, user_id):
-        keyboard = await build_join_keyboard(callback.bot)
+        keyboard = build_join_keyboard()
         await callback.bot.send_message(
             chat_id,
-            "Botdan foydalanish uchun quyidagi kanallarga obuna bo'ling.",
+            "You must join the required channels to use this bot.",
             reply_markup=keyboard,
         )
     else:
-        await callback.bot.send_message(chat_id, "Xush kelibsiz! Kino kodini yuboring.")
+        await callback.bot.send_message(chat_id, "Welcome! Send the movie code to receive the file.")
+

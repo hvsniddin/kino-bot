@@ -1,3 +1,3 @@
-from app.handlers import admin, user
+from app.handlers import admin, join, user
 
-__all__ = ["admin", "user"]
+__all__ = ["admin", "user", "join"]
